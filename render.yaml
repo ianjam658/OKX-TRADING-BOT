@@ -1,0 +1,36 @@
+services:
+  - type: web
+    name: survival-trading-bot
+    env: python
+    plan: free
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn app:app --bind 0.0.0.0:$PORT --workers 1 --threads 4 --timeout 120"
+    envVars:
+      - key: EXCHANGE_ID
+        value: okx
+      - key: SANDBOX_MODE
+        value: "true"
+      - key: DRY_RUN
+        value: "true"
+      - key: SYMBOL
+        value: "BTC/USDT"
+      - key: TIMEFRAME
+        value: "15m"
+      - key: FAST_MA
+        value: "9"
+      - key: SLOW_MA
+        value: "21"
+      - key: POLL_INTERVAL_SECONDS
+        value: "60"
+      - key: STARTING_BALANCE_USD
+        value: "20"
+      - key: MIN_TRADE_USD
+        value: "5"
+      - key: MAX_RISK_PER_TRADE_PCT
+        value: "0.25"
+      - key: CRITICAL_BALANCE_PCT
+        value: "0.25"
+      - key: DEATH_BALANCE_USD
+        value: "1"
+      # Set these as secrets in the Render dashboard, NOT here:
+      # API_KEY, API_SECRET, API_PASSPHRASE
