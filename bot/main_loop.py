@@ -11,8 +11,9 @@ from bot.config import config
 from bot.exchange_client import ExchangeClient
 from bot.journal import narrate, setup_logging
 from bot.risk_manager import RiskManager
+from bot.sentiment import get_market_sentiment
 from bot.state import load_state, save_state
-from bot.strategy import generate_signal
+from bot.strategy import combine_with_sentiment, generate_signal
 
 logger = logging.getLogger("main_loop")
 
@@ -55,7 +56,7 @@ def _tick(client: ExchangeClient, risk: RiskManager, state: dict):
     balance = live_balance if live_balance is not None else state["balance_usd"]
 
     danger = risk.danger_level(balance)
-    narrate(danger, balance)
+    narrate(danger, balance, state.get("trade_count", 0))
 
     if risk.is_dead(balance):
         state["balance_usd"] = balance
@@ -67,6 +68,11 @@ def _tick(client: ExchangeClient, risk: RiskManager, state: dict):
     ohlcv = client.fetch_ohlcv()
     last_price = ohlcv[-1][4]
     signal = generate_signal(ohlcv)
+
+    sentiment = get_market_sentiment()  # 'neutral' if disabled/unavailable
+    signal = combine_with_sentiment(signal, sentiment)
+    if sentiment != "neutral":
+        logger.info("Sentiment read: %s (signal after filter: %s)", sentiment, signal)
 
     if signal in ("buy", "sell"):
         size_usd = risk.position_size_usd(balance)
