@@ -35,8 +35,8 @@ services:
       - key: GROQ_MODEL
         value: openai/gpt-oss-20b
       - key: USE_LLM_SENTIMENT
-        value: "false"
+        sync: false
       - key: USE_LLM_NARRATION
-        value: "false"
+        sync: false
       # Set these as secrets in the Render dashboard, NOT here:
       # API_KEY, API_SECRET, API_PASSPHRASE, GROQ_API_KEY
