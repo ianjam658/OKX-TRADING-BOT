@@ -17,6 +17,7 @@ def load_state() -> dict:
             "balance_usd": config.starting_balance_usd,
             "is_dead": False,
             "trade_count": 0,
+            "last_acted_signal": None,
         }
     with open(config.state_file, "r") as f:
         return json.load(f)
