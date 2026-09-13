@@ -18,8 +18,16 @@ def generate_signal(ohlcv) -> str:
     """
     ohlcv: list of [timestamp, open, high, low, close, volume], oldest first.
     Returns 'buy', 'sell', or 'hold'.
+
+    IMPORTANT: the exchange's most recent candle is still forming (its
+    close price keeps changing until the timeframe interval ends). If
+    we compute the crossover using that live candle, the signal can
+    flicker true/false on every poll as price wiggles in real time --
+    producing repeated false trades instead of one real one per actual
+    crossover. So we drop it and only ever look at fully closed candles.
     """
-    closes = [candle[4] for candle in ohlcv]
+    closed_candles = ohlcv[:-1]
+    closes = [candle[4] for candle in closed_candles]
 
     fast = _sma(closes, config.fast_ma)
     slow = _sma(closes, config.slow_ma)
@@ -27,7 +35,7 @@ def generate_signal(ohlcv) -> str:
     prev_slow = _sma(closes[:-1], config.slow_ma)
 
     if None in (fast, slow, prev_fast, prev_slow):
-        return "hold"  # not enough data yet
+        return "hold"  # not enough closed candles yet
 
     crossed_up = prev_fast <= prev_slow and fast > slow
     crossed_down = prev_fast >= prev_slow and fast < slow
