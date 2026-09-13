@@ -57,7 +57,7 @@ class Config:
     # veto a trade, never invent one -- see strategy.combine_with_sentiment.
     # Narration is pure flavor text and never affects trading decisions.
     groq_api_key: str = os.getenv("GROQ_API_KEY", "")
-    groq_model: str = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
+    groq_model: str = os.getenv("GROQ_MODEL", "openai/gpt-oss-20b")
     use_llm_sentiment: bool = _get_bool("USE_LLM_SENTIMENT", False)
     use_llm_narration: bool = _get_bool("USE_LLM_NARRATION", False)
 
