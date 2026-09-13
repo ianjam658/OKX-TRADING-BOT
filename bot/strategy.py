@@ -37,3 +37,18 @@ def generate_signal(ohlcv) -> str:
     if crossed_down:
         return "sell"
     return "hold"
+
+
+def combine_with_sentiment(signal: str, sentiment: str) -> str:
+    """
+    Sentiment is an advisor, never the decision-maker: it can only
+    VETO a signal that directly conflicts with it (downgrade to
+    'hold'). It can never turn a 'hold' into a trade, and it never
+    strengthens a signal that already agrees with it. This keeps the
+    core MA-crossover strategy in charge and the LLM as a filter.
+    """
+    if signal == "buy" and sentiment == "bearish":
+        return "hold"
+    if signal == "sell" and sentiment == "bullish":
+        return "hold"
+    return signal
