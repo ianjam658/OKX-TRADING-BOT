@@ -32,5 +32,11 @@ services:
         value: "0.25"
       - key: DEATH_BALANCE_USD
         value: "1"
+      - key: GROQ_MODEL
+        value: llama-3.1-8b-instant
+      - key: USE_LLM_SENTIMENT
+        value: "false"
+      - key: USE_LLM_NARRATION
+        value: "false"
       # Set these as secrets in the Render dashboard, NOT here:
-      # API_KEY, API_SECRET, API_PASSPHRASE
+      # API_KEY, API_SECRET, API_PASSPHRASE, GROQ_API_KEY
