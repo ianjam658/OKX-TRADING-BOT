@@ -75,14 +75,26 @@ def _tick(client: ExchangeClient, risk: RiskManager, state: dict):
         logger.info("Sentiment read: %s (signal after filter: %s)", sentiment, signal)
 
     if signal in ("buy", "sell"):
-        size_usd = risk.position_size_usd(balance)
-        if size_usd > 0:
-            result = client.create_market_order(signal, size_usd, last_price)
-            if result is not None:
-                state["trade_count"] = state.get("trade_count", 0) + 1
-                logger.info("Trade #%d executed: %s $%.2f", state["trade_count"], signal, size_usd)
+        # Second safety net: even a real crossover should only be acted
+        # on once. If the last tick already traded this exact signal
+        # and nothing has changed since, skip it -- this catches any
+        # edge case beyond the closed-candle fix in strategy.py.
+        if signal == state.get("last_acted_signal"):
+            logger.info("Signal %s unchanged since last trade -- skipping duplicate.", signal)
         else:
-            logger.info("Signal was %s but position size too small to act on.", signal)
+            size_usd = risk.position_size_usd(balance)
+            if size_usd > 0:
+                result = client.create_market_order(signal, size_usd, last_price)
+                if result is not None:
+                    state["trade_count"] = state.get("trade_count", 0) + 1
+                    state["last_acted_signal"] = signal
+                    logger.info("Trade #%d executed: %s $%.2f", state["trade_count"], signal, size_usd)
+            else:
+                logger.info("Signal was %s but position size too small to act on.", signal)
+    elif signal == "hold":
+        # A hold clears the guard so the NEXT real buy/sell (in either
+        # direction) is always allowed through.
+        state["last_acted_signal"] = None
 
     state["balance_usd"] = balance
     save_state(state)
