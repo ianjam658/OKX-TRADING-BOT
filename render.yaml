@@ -33,7 +33,7 @@ services:
       - key: DEATH_BALANCE_USD
         value: "1"
       - key: GROQ_MODEL
-        value: llama-3.1-8b-instant
+        value: openai/gpt-oss-20b
       - key: USE_LLM_SENTIMENT
         value: "false"
       - key: USE_LLM_NARRATION
