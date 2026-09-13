@@ -137,6 +137,30 @@ tradingbot/
 | `DEATH_BALANCE_USD` | Balance floor -- at or below this, the bot stops trading permanently |
 | `POLL_INTERVAL_SECONDS` | How often the bot checks the market |
 
+## Optional AI layer (Groq) -- what it does and doesn't do
+
+Two optional, off-by-default features use an LLM via Groq's API:
+
+- **`USE_LLM_SENTIMENT=true`** -- reads recent crypto headlines and
+  classifies rough sentiment (bullish/bearish/neutral). This can only
+  **veto** a trade the MA-crossover strategy already wanted to make
+  (e.g. block a "buy" if sentiment reads bearish). It can never
+  invent a trade on its own, and defaults to neutral (no effect)
+  if the feature is off, the Groq key is missing, or the call fails.
+- **`USE_LLM_NARRATION=true`** -- writes more varied first-person
+  "survival" journal lines instead of picking from fixed templates.
+  Pure flavor text -- it has zero effect on trading decisions.
+
+**What this is NOT:** a market-prediction engine. No LLM can reliably
+predict short-term crypto price moves -- if one could, it would be
+worth more than every hedge fund on earth. Sentiment reading is a
+noisy secondary input at best, not an edge. Treat both features as
+optional flavor/experimentation, not a performance upgrade.
+
+To enable either, add `GROQ_API_KEY` as a secret env var on Render
+(get one free at console.groq.com), and set `USE_LLM_SENTIMENT`
+and/or `USE_LLM_NARRATION` to `true`.
+
 ## Safety checklist before going live
 
 - [ ] API key has **trade-only** permission, withdrawal disabled
