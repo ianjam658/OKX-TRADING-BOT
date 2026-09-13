@@ -9,6 +9,7 @@ import os
 import random
 
 from bot.config import config
+from bot.llm_client import call_groq
 
 logger = logging.getLogger("journal")
 
@@ -49,6 +50,28 @@ def setup_logging():
     )
 
 
-def narrate(danger_level: str, balance: float):
-    message = random.choice(_MESSAGES[danger_level])
+def _llm_narrate(danger_level: str, balance: float, trade_count: int):
+    """Returns an LLM-written line, or None to fall back to templates."""
+    if not config.use_llm_narration:
+        return None
+
+    prompt = (
+        f"You are an autonomous trading bot narrating your own situation in "
+        f"first person. Current balance: ${balance:.2f}. Danger level: "
+        f"{danger_level}. Trades made so far: {trade_count}. "
+        "Write ONE short first-person sentence (under 25 words) reflecting "
+        "how you feel about your situation. Be direct, not melodramatic."
+    )
+    return call_groq(
+        system_prompt="You are a trading bot with a survival instinct. "
+                      "You narrate tersely and never repeat yourself exactly.",
+        user_prompt=prompt,
+        max_tokens=40,
+    )
+
+
+def narrate(danger_level: str, balance: float, trade_count: int = 0):
+    message = _llm_narrate(danger_level, balance, trade_count) or random.choice(
+        _MESSAGES[danger_level]
+    )
     logger.info("Balance: $%.2f | Status: %s | \"%s\"", balance, danger_level, message)
