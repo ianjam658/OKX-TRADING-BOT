@@ -7,9 +7,16 @@ Every call is wrapped so a missing key, network error, or bad
 response NEVER crashes the bot -- it just returns None and callers
 fall back to their non-LLM behavior. The LLM is decoration/advice
 here, never a single point of failure for trading.
+
+A simple cooldown throttles how often Groq is actually called. With
+sentiment + narration both wired in, calling every single poll tick
+(as often as once a minute) can exceed Groq's free-tier rate limits,
+which just produces noisy 429 log spam for no benefit -- narration
+text doesn't need to change every 60 seconds anyway.
 """
 
 import logging
+import time
 
 import requests
 
@@ -19,10 +26,19 @@ logger = logging.getLogger("llm_client")
 
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 
+_last_call_at = 0.0
+
 
 def call_groq(system_prompt: str, user_prompt: str, max_tokens: int = 60):
+    global _last_call_at
+
     if not config.groq_api_key:
         return None
+
+    elapsed = time.monotonic() - _last_call_at
+    if elapsed < config.groq_min_interval_seconds:
+        return None  # cooldown active -- skip silently, caller falls back
+
     try:
         response = requests.post(
             GROQ_URL,
@@ -41,6 +57,7 @@ def call_groq(system_prompt: str, user_prompt: str, max_tokens: int = 60):
             },
             timeout=10,
         )
+        _last_call_at = time.monotonic()  # counts even toward failed calls, avoids hammering during an outage
         response.raise_for_status()
         data = response.json()
         return data["choices"][0]["message"]["content"].strip()
