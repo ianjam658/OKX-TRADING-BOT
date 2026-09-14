@@ -60,6 +60,7 @@ class Config:
     groq_model: str = os.getenv("GROQ_MODEL", "openai/gpt-oss-20b")
     use_llm_sentiment: bool = _get_bool("USE_LLM_SENTIMENT", False)
     use_llm_narration: bool = _get_bool("USE_LLM_NARRATION", False)
+    groq_min_interval_seconds: int = _get_int("GROQ_MIN_INTERVAL_SECONDS", 300)
 
     def validate(self) -> None:
         missing = []
